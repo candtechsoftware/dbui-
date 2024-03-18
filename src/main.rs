@@ -5,15 +5,16 @@
 pub mod action;
 pub mod app;
 pub mod cli;
-pub mod components;
 pub mod config;
-pub mod mode;
+pub mod components;
+pub mod service;
 pub mod tui;
 pub mod utils;
 
 use clap::Parser;
 use cli::Cli;
 use color_eyre::eyre::Result;
+use components::{home::Home, Component};
 
 use crate::{
   app::App,
@@ -26,7 +27,11 @@ async fn tokio_main() -> Result<()> {
   initialize_panic_handler()?;
 
   let args = Cli::parse();
-  let mut app = App::new(args.tick_rate, args.frame_rate)?;
+  let mut components: Vec<Box<dyn Component>> = Vec::new();
+  let home = Home::new().await;
+  components.push(Box::new(home));
+
+  let mut app = App::new(args.tick_rate, args.frame_rate, components)?;
   app.run().await?;
 
   Ok(())
